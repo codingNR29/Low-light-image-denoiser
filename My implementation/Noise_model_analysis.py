@@ -1,7 +1,10 @@
 from pathlib import Path
+from Noise_analysis_for_the_first_image import im1_gt_rgb, residual
+from scipy.stats import skew, kurtosis, norm
 import torch
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 #Importing the intensity statistics from noise analysis folder
 CSV_PATH = Path(__file__).resolve().parents[1] / "noise_analysis" / "intensity_statistics.csv"
@@ -669,3 +672,74 @@ for channel in channels:
 
 ##############################################################################################################
 #Standardizing the residual
+
+#Testing on a red channel of a single image
+def red_bias(x):
+    return (
+        -0.00000741 * x**3
+        + 0.002352 * x**2
+        - 0.2294 * x
+        + 8.7506
+    )
+
+def red_variance(x):
+    return (
+        -0.00029456 * x**3
+        + 0.063619 * x**2
+        + 4.0171 * x
+        + 249.0226
+    )
+
+gt_r = im1_gt_rgb[:, :, 0].astype(np.float32)
+res_r = residual[:, :, 0]
+
+mu = red_bias(gt_r)
+
+var = red_variance(gt_r)
+
+# Safety: variance must stay positive
+var = np.maximum(var, 1e-6)
+
+sigma = np.sqrt(var)
+
+z = (res_r - mu) / sigma
+
+#Plotting
+plt.figure(figsize=(8, 5))
+
+plt.hist(
+    z.flatten(),
+    bins=100,
+    density=True,
+    alpha=0.7,
+    label="Standardized residual"
+)
+
+x_axis = np.linspace(
+    -5,
+    5,
+    500
+)
+
+plt.plot(
+    x_axis,
+    norm.pdf(x_axis, 0, 1),
+    label="Standard Normal N(0,1)"
+)
+
+plt.xlabel("Standardized Residual")
+plt.ylabel("Density")
+plt.title(
+    "Standardized Residual vs Standard Gaussian"
+)
+
+plt.legend()
+plt.grid()
+plt.show()
+
+#Looking at statistics
+print("Mean      :", np.mean(z))
+print("Std       :", np.std(z))
+print("Skewness  :", skew(z.flatten()))
+print("Kurtosis  :", kurtosis(z.flatten()))
+
