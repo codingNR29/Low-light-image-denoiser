@@ -14,6 +14,25 @@ The final solution combines:
 The complete inference pipeline operates using **only the noisy input image**.  
 Ground-truth images are not required during test-time inference.
 
+<table align="center">
+  <tr>
+    <th>Noisy Input</th>
+    <th>Final Denoised Output</th>
+    <th>Ground Truth</th>
+  </tr>
+  <tr>
+    <td>
+      <img src="assets/example_noisy.png" alt="Noisy Input" width="300">
+    </td>
+    <td>
+      <img src="assets/example_denoised.png" alt="Final Denoised Output" width="300">
+    </td>
+    <td>
+      <img src="assets/example_ground_truth.png" alt="Ground Truth" width="300">
+    </td>
+  </tr>
+</table>
+
 ---
 
 ## Final Method
@@ -331,24 +350,23 @@ python -m pip install --upgrade pip
 
 ---
 
-## 4. Install Dependencies
+## Install Dependencies
 
-The recommended method is:
+Install the required packages using:
 
 ```bash
 pip install -r scripts/requirements.txt
-```
 
 The main runtime dependencies are:
 
 ```text
-numpy
-Pillow
-opencv-python
-torch
-scikit-image
-scikit-learn
-joblib
+numpy==2.4.6
+Pillow==12.3.0
+opencv-python==5.0.0.93
+torch==2.5.1
+scikit-image==0.26.0
+scikit-learn==1.9.1
+joblib==1.6.0
 ```
 
 If installing manually:
