@@ -42,21 +42,15 @@ For each noisy image:
 
 The final estimate is
 
-\[
-\hat{x}
-=
-\alpha D(y)
-+
-(1-\alpha)W(y)
-\]
+$$
+\hat{x} = \alpha D(y) + (1-\alpha)W(y)
+$$
 
 where:
 
-- \(D(y)\) is the Robust DnCNN output
-- \(W(y)\) is the Wavelet output
-- \(\alpha\) is selected according to the predicted noise severity
-
----
+- $D(y)$ is the Robust DnCNN output
+- $W(y)$ is the Wavelet output
+- $\alpha$ is selected according to the predicted noise severity
 
 ## Files
 
