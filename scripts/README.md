@@ -63,3 +63,14 @@ scripts/
 ├── best_robust_dncnn.pth
 ├── severity_estimator.joblib
 └── README.md
+
+## Model Files
+
+The final inference pipeline requires the following frozen model files:
+
+| File | Location | SHA-256 |
+|---|---|---|
+| `best_robust_dncnn.pth` | `scripts/best_robust_dncnn.pth` | `FC6A7FAA227FE32EF8C0C1955EBDAC1581422B6364D7DC1F740828E3D73A0E3B` |
+| `severity_estimator.joblib` | `scripts/severity_estimator.joblib` | `7628A00D5BB52B8F6DA3EFA82551993C5FA8CC66E1FA247A63D61E6DC5FD79FC` |
+
+These files correspond to the models used to generate the submitted preliminary outputs and must not be modified after the submission deadline.
