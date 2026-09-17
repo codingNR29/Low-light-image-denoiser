@@ -538,20 +538,14 @@ The evaluator reports:
 
 # Runtime
 
-For the preliminary hidden-image set:
+Runtime was measured on the same 20 preliminary images (`461–480`) using the final packaged inference pipeline.
 
-```text
-Images processed      : 20
-Average runtime/image : 0.699 s
-Total runtime         : 16.38 s
-```
+| Inference Mode | Images | Average Runtime / Image | Total Runtime |
+|---|---:|---:|---:|
+| CUDA-accelerated | 20 | **0.699 s** | **16.38 s** |
+| CPU-only | 20 | **6.211 s** | **126.58 s** |
 
-Runtime was measured using CUDA on the development system.
-
-The final pipeline therefore remains computationally practical despite evaluating both the DnCNN and classical Wavelet branches.
-
----
-
+The CUDA-accelerated measurement uses the GPU for DnCNN inference, while the Wavelet denoising, noise-severity estimation, adaptive fusion, and image I/O remain part of the complete end-to-end pipeline.
 # Model Files
 
 ## `best_robust_dncnn.pth`
