@@ -1,4 +1,6 @@
 /Competition repo/
 /mora_sp_cup_2026/
 /final_test/
-/prepare_validation_92.py/
+prepare_validation_92.py
+/check_submission_outputs.py/
+check_submission_outputs.py
