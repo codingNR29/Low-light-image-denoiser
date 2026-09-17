@@ -80,7 +80,7 @@ VAL_CSV = (
 )
 
 
-#Previously generated DnCNN validation outputs
+'''#Previously generated DnCNN validation outputs
 DNCNN_DIR = (
 
     SCRIPT_DIR
@@ -89,18 +89,33 @@ DNCNN_DIR = (
 
     / "denoised"
 
+)'''
+DNCNN_DIR = (
+
+    SCRIPT_DIR
+
+    / "robust_dncnn_validation_92"
+
+    / "denoised"
+
 )
 
-
-#Creating hybrid output directory
+'''#Creating hybrid output directory
 OUTPUT_DIR = (
 
     SCRIPT_DIR
 
     / "hybrid_fusion_validation"
 
-)
+)'''
+#Creating robust hybrid output directory
+OUTPUT_DIR = (
 
+    SCRIPT_DIR
+
+    / "robust_hybrid_fusion_validation"
+
+)
 
 OUTPUT_DIR.mkdir(
     parents=True,

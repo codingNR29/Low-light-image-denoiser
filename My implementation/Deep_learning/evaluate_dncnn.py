@@ -80,24 +80,33 @@ VAL_CSV = (
 )
 
 
-#Best trained DnCNN model
+#Best robust DnCNN model
 MODEL_PATH = (
 
     SCRIPT_DIR
 
-    / "dncnn_training"
+    / "dncnn_robust_finetuning"
 
-    / "best_dncnn.pth"
+    / "best_robust_dncnn.pth"
 
 )
 
+
+'''#Creating evaluation output directory
+OUTPUT_DIR = (
+
+    SCRIPT_DIR
+
+    / "dncnn_validation_92"
+
+)'''
 
 #Creating evaluation output directory
 OUTPUT_DIR = (
 
     SCRIPT_DIR
 
-    / "dncnn_validation_92"
+    / "robust_dncnn_validation_92"
 
 )
 
