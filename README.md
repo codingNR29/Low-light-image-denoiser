@@ -275,19 +275,20 @@ The exact structure may contain additional experimental files, but the main subm
 .
 ├── README.md
 │
-├── scripts/
+├── assets/
+│   ├── example_noisy.png
+│   ├── example_denoised.png
+│   └── example_ground_truth.png
+│
+├── baseline/
 │   ├── denoise.py
-│   ├── dncnn_model.py
-│   ├── best_robust_dncnn.pth
-│   ├── severity_estimator.joblib
 │   ├── requirements.txt
 │   └── README.md
 │
+├── Competition repo/
+│   └──organizers' repository
+│
 ├── competition_data/
-│   ├── public/
-│   │   ├── noisy/
-│   │   └── ground_truth/
-│   │
 │   └── submissions/
 │       ├── noisy/
 │       └── denoised/
@@ -295,8 +296,16 @@ The exact structure may contain additional experimental files, but the main subm
 ├── evaluation/
 │   └── evaluate.py
 │
-└── Extra/
-    └── experimental and development files
+└── scripts/
+    ├── denoise.py
+    ├── dncnn_model.py
+    ├── best_robust_dncnn.pth
+    ├── severity_estimator.joblib
+    ├── requirements.txt
+    ├── README.md
+    └── testings/
+        └── experimental and development files
+
 ```
 
 The `scripts/` directory contains everything required for final inference.
