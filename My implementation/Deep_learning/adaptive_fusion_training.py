@@ -148,6 +148,87 @@ severity_df["image"] = (
 
 )
 
+#Loading severity estimator metadata
+METADATA_PATH = (
+
+    SCRIPT_DIR
+
+    / "noise_severity_estimator"
+
+    / "severity_estimator_metadata.json"
+
+)
+
+
+#Reading saved severity thresholds
+with open(
+    METADATA_PATH,
+    "r"
+) as file:
+
+    severity_metadata = json.load(
+        file
+    )
+
+
+#Getting Low to Medium threshold
+threshold_low_medium = (
+
+    severity_metadata[
+        "threshold_low_medium"
+    ]
+
+)
+
+
+#Getting Medium to High threshold
+threshold_medium_high = (
+
+    severity_metadata[
+        "threshold_medium_high"
+    ]
+
+)
+
+
+#Converting predicted severity into severity group
+def severity_to_group(
+    severity
+):
+
+    #Low severity
+    if severity < threshold_low_medium:
+
+        return "Low"
+
+
+    #Medium severity
+    elif severity < threshold_medium_high:
+
+        return "Medium"
+
+
+    #High severity
+    else:
+
+        return "High"
+
+
+#Creating predicted severity group for training images
+severity_df[
+    "predicted_group"
+] = [
+
+    severity_to_group(
+        value
+    )
+
+    for value in severity_df[
+        "predicted_severity"
+    ]
+
+]
+
 
 print()
 
