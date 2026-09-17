@@ -35,7 +35,6 @@ from skimage.restoration import denoise_wavelet
 
 from dncnn_model import DnCNN
 
-
 #Getting current script directory
 SCRIPT_DIR = Path(
     __file__
@@ -101,10 +100,8 @@ WAVELET_METHOD = "BayesShrink"
 
 WAVELET_MODE = "soft"
 
-
 #Pixel sampling stride used by severity estimator
 SAMPLE_STRIDE = 4
-
 
 #Feature order used when training severity estimator
 FEATURE_NAMES = [
@@ -178,7 +175,6 @@ def strip_noise_suffix(
 
 
     return stem
-
 
 #Correcting strong local defective pixels
 def correct_defect_pixels(

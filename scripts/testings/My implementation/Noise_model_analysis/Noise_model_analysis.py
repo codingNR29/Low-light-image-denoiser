@@ -1,745 +1,677 @@
 from pathlib import Path
-from Noise_analysis_for_the_first_image import im1_gt_rgb, residual
-from scipy.stats import skew, kurtosis, norm
-import torch
+
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
 
-#Importing the intensity statistics from noise analysis folder
-CSV_PATH = Path(__file__).resolve().parents[1] / "noise_analysis" / "intensity_statistics.csv"
 
-#Setting the output path
-OUTPUT_DIR = Path("noise_model_analysis")
-OUTPUT_DIR.mkdir(exist_ok=True)
+#Getting current script directory
+SCRIPT_DIR = Path(
+    __file__
+).resolve().parent
 
-df = pd.read_csv(CSV_PATH)
 
-'''
-#Just to confirm the content
-print(df.head())
-print(df["channel"].unique())'''
+#Getting testing directory
+TESTING_DIR = (
+    SCRIPT_DIR.parents[1]
+)
 
-#Creating a new column to store the variance values
-df["residual_variance"] = df["residual_std"] ** 2
 
-'''
-#Checking it
+#Getting intensity statistics CSV
+CSV_PATH = (
+
+    TESTING_DIR
+
+    / "Noise_characterization"
+
+    / "noise_analysis"
+
+    / "intensity_statistics.csv"
+
+)
+
+
+#Setting output directory
+OUTPUT_DIR = (
+
+    TESTING_DIR
+
+    / "Noise_characterization"
+
+    / "noise_model_analysis"
+
+    / "report_figures"
+
+)
+
+
+#Creating output directory
+OUTPUT_DIR.mkdir(
+    parents=True,
+    exist_ok=True
+)
+
+
 print(
-    df[
-        [
-            "channel",
-            "intensity_center",
-            "residual_std",
-            "residual_variance"
-        ]
-    ].head()
-)
-'''
-
-#Plotting the data points for the variance
-'''
-#Plotting for R G B
-plt.figure(figsize=(10, 6))
-
-channels = ["R", "G", "B"]
-
-for channel in channels:
-
-    channel_df = df[
-        df["channel"] == channel
-    ].copy()
-
-    channel_df = channel_df.sort_values(
-        "intensity_center"
-    )
-
-    if channel == 'R':
-        plt.scatter(
-            channel_df["intensity_center"],
-            channel_df["residual_variance"],
-            label=channel,
-            color = 'red'
-        )
-    elif channel == 'G':
-        plt.scatter(
-            channel_df["intensity_center"],
-            channel_df["residual_variance"],
-            label=channel,
-            color = 'green'
-        )
-    else:
-        plt.scatter(
-            channel_df["intensity_center"],
-            channel_df["residual_variance"],
-            label=channel,
-            color = 'blue'
-        )
-        
-        
-
-plt.xlabel("Ground Truth Intensity")
-plt.ylabel("Residual Variance")
-plt.title("Residual Variance vs Signal Intensity")
-
-plt.legend()
-plt.grid()
-
-plt.savefig(
-    OUTPUT_DIR / "variance_vs_intensity.png",
-    dpi=300
+    "Reading intensity statistics from:"
 )
 
-plt.show()
-
-#Connected version
-plt.figure(figsize=(10, 6))
-
-for channel in channels:
-
-    channel_df = df[
-        df["channel"] == channel
-    ].copy()
-
-    channel_df = channel_df.sort_values(
-        "intensity_center"
-    )
-
-    if channel == 'R':
-        plt.plot(
-            channel_df["intensity_center"],
-            channel_df["residual_variance"],
-            marker="o",
-            label=channel,
-            color = 'red'
-        )
-    elif channel == 'G':
-        plt.plot(
-            channel_df["intensity_center"],
-            channel_df["residual_variance"],
-            marker="o",
-            label=channel,
-            color = 'green'
-        )
-    else:
-        plt.plot(
-            channel_df["intensity_center"],
-            channel_df["residual_variance"],
-            marker="o",
-            label=channel,
-            color = 'blue'
-        )
-
-plt.xlabel("Ground Truth Intensity")
-plt.ylabel("Residual Variance")
-plt.title("Residual Variance Trend vs Signal Intensity")
-
-plt.legend()
-plt.grid()
-
-plt.savefig(
-    OUTPUT_DIR / "variance_vs_intensity_trend.png",
-    dpi=300
+print(
+    CSV_PATH
 )
 
-plt.show()
-'''
 
-#Defining functions to fit the data set
-def fit_linear(x, y):
+print()
 
-    x = torch.tensor(
-        x,
-        dtype=torch.float32
-    )
-
-    y = torch.tensor(
-        y,
-        dtype=torch.float32
-    )
-
-    # Design matrix:
-    # [x, 1]
-    X = torch.stack(
-        [
-            x,
-            torch.ones_like(x)
-        ],
-        dim=1
-    )
-
-    # Solve least squares
-    solution = torch.linalg.lstsq(
-        X,
-        y
-    ).solution
-
-    a = solution[0]
-    b = solution[1]
-
-    return a.item(), b.item()
-
-def fit_quadratic(x, y):
-
-    x = torch.tensor(
-        x,
-        dtype=torch.float32
-    )
-
-    y = torch.tensor(
-        y,
-        dtype=torch.float32
-    )
-
-    # Design matrix:
-    # [x^2, x, 1]
-    X = torch.stack(
-        [
-            x ** 2,
-            x,
-            torch.ones_like(x)
-        ],
-        dim=1
-    )
-
-    solution = torch.linalg.lstsq(
-        X,
-        y
-    ).solution
-
-    a = solution[0]
-    b = solution[1]
-    c = solution[2]
-
-    return (
-        a.item(),
-        b.item(),
-        c.item()
-    )
-
-def fit_cubic(x, y):
-
-    x = torch.tensor(
-        x,
-        dtype=torch.float64
-    )
-
-    y = torch.tensor(
-        y,
-        dtype=torch.float64
-    )
-
-    # Design matrix:
-    # [x^3, x^2, x, 1]
-    X = torch.stack(
-        [
-            x ** 3,
-            x ** 2,
-            x,
-            torch.ones_like(x)
-        ],
-        dim=1
-    )
-
-    solution = torch.linalg.lstsq(
-        X,
-        y
-    ).solution
-
-    a = solution[0]
-    b = solution[1]
-    c = solution[2]
-    d = solution[3]
-
-    return (
-        a.item(),
-        b.item(),
-        c.item(),
-        d.item()
-    )
-
-
-#Checking for red only
-red_df = df[
-    df["channel"] == "R"
-].copy()
-
-red_df = red_df.sort_values(
-    "intensity_center"
+print(
+    "Saving report figures to:"
 )
 
-x = red_df[
-    "intensity_center"
-].values
+print(
+    OUTPUT_DIR
+)
 
-y = red_df[
+
+#Loading intensity statistics
+df = pd.read_csv(
+    CSV_PATH
+)
+
+
+#Calculating residual variance
+df[
     "residual_variance"
-].values
+] = (
 
-#Fitting the models
-a_lin, b_lin = fit_linear(
+    df[
+        "residual_std"
+    ] ** 2
+
+)
+
+
+#RGB channels
+channels = [
+    "R",
+    "G",
+    "B"
+]
+
+
+#Colors corresponding to RGB channels
+channel_colors = {
+
+    "R": "red",
+
+    "G": "green",
+
+    "B": "blue"
+
+}
+
+
+#Function to fit cubic model
+def fit_cubic(
     x,
     y
-)
+):
 
-a_quad, b_quad, c_quad = fit_quadratic(
-    x,
-    y
-)
+    #Fitting cubic polynomial
+    coefficients = np.polyfit(
 
-a_cubic, b_cubic, c_cubic, d_cubic = fit_cubic(
-    x,
-    y
-)
+        x,
 
-#Printing the equations
-print("Linear model:")
-print(
-    f"y = {a_lin:.4f}x + {b_lin:.4f}"
-)
+        y,
 
-print()
+        deg=3
 
-print("Quadratic model:")
-print(
-    f"y = {a_quad:.6f}x^2 "
-    f"+ {b_quad:.4f}x "
-    f"+ {c_quad:.4f}"
-)
+    )
 
-print()
 
-print("Cubic model:")
-print(
-    f"y = {a_cubic:.6f}x^3 "
-    f"+ {b_cubic:.4f}x^2 "
-    f"+ {c_cubic:.4f}x"
-    f"+ {d_cubic:.4f}"
-)
+    return coefficients
 
-#Generating predicted values
-y_linear = (
-    a_lin * x
-    + b_lin
-)
 
-y_quadratic = (
-    a_quad * x ** 2
-    + b_quad * x
-    + c_quad
-)
-
-y_cubic = (
-    a_cubic * x ** 3
-    + b_cubic * x ** 2
-    + c_cubic * x
-    + d_cubic
-)
-    
-
-#Plotting for red
-'''
-plt.figure(figsize=(10, 6))
-
-plt.scatter(
-    x,
-    y,
-    label="Measured data"
-)
-
-plt.plot(
-    x,
-    y_linear,
-    label="Linear fit"
-)
-
-plt.plot(
-    x,
-    y_quadratic,
-    label="Quadratic fit"
-)
-
-plt.plot(
-    x,
-    y_cubic,
-    label="Cubic fit"
-)
-
-plt.xlabel("Ground Truth Intensity")
-plt.ylabel("Residual Variance")
-
-plt.title(
-    "Linear vs Quadratic vs Cubic Fit - Red Channel"
-)
-
-plt.legend()
-plt.grid()
-
-plt.show()
-'''
-
-#Function to caluclate R^2
+#Function to calculate R squared
 def calculate_r2(
     y_true,
     y_pred
 ):
 
-    y_true = torch.tensor(
-        y_true,
-        dtype=torch.float32
-    )
+    #Calculating residual sum of squares
+    ss_res = np.sum(
 
-    y_pred = torch.tensor(
-        y_pred,
-        dtype=torch.float32
-    )
-
-    ss_res = torch.sum(
-        (y_true - y_pred) ** 2
-    )
-
-    ss_tot = torch.sum(
         (
             y_true
-            - torch.mean(y_true)
+
+            -
+
+            y_pred
+
         ) ** 2
+
     )
 
-    r2 = 1 - ss_res / ss_tot
 
-    return r2.item()
+    #Calculating total sum of squares
+    ss_tot = np.sum(
 
-#Calculating values
-r2_linear = calculate_r2(
-    y,
-    y_linear
+        (
+            y_true
+
+            -
+
+            np.mean(
+                y_true
+            )
+
+        ) ** 2
+
+    )
+
+
+    #Calculating R squared
+    r2 = (
+
+        1
+
+        -
+
+        ss_res
+        / ss_tot
+
+    )
+
+
+    return r2
+
+
+# ============================================================
+# Residual variance vs intensity
+# ============================================================
+
+plt.figure(
+    figsize=(8.5, 5.2)
 )
 
-r2_quadratic = calculate_r2(
-    y,
-    y_quadratic
-)
-
-r2_cubic = calculate_r2(
-    y,
-    y_cubic
-)
-
-print(
-    "Linear R²:",
-    r2_linear
-)
-
-print(
-    "Quadratic R²:",
-    r2_quadratic
-)
-
-print(
-    "Cubic R²:",
-    r2_cubic
-)
-
-#Fitting for all three channels
-channels = ["R", "G", "B"]
 
 for channel in channels:
 
+    #Selecting current channel
     channel_df = df[
-        df["channel"] == channel
+
+        df[
+            "channel"
+        ]
+
+        == channel
+
     ].copy()
 
+
+    #Sorting according to intensity
     channel_df = channel_df.sort_values(
+
         "intensity_center"
+
     )
 
+
+    #Getting intensity values
     x = channel_df[
+
         "intensity_center"
+
     ].values
 
+
+    #Getting measured residual variance
     y = channel_df[
+
         "residual_variance"
+
     ].values
 
-    a, b, c, d = fit_cubic(x, y)
 
-    y_pred = (
-        a * x**3
-        + b * x**2
-        + c * x
-        + d
+    #Fitting cubic model
+    coefficients = fit_cubic(
+
+        x,
+
+        y
+
     )
 
+
+    #Creating smooth intensity values
+    x_fit = np.linspace(
+
+        x.min(),
+
+        x.max(),
+
+        500
+
+    )
+
+
+    #Calculating smooth fitted curve
+    y_fit = np.polyval(
+
+        coefficients,
+
+        x_fit
+
+    )
+
+
+    #Calculating prediction at measured points
+    y_pred = np.polyval(
+
+        coefficients,
+
+        x
+
+    )
+
+
+    #Calculating R squared
     r2 = calculate_r2(
+
         y,
+
         y_pred
+
     )
+
+
+    #Plotting measured values
+    plt.scatter(
+
+        x,
+
+        y,
+
+        color=channel_colors[
+            channel
+        ],
+
+        s=20,
+
+        alpha=0.55
+
+    )
+
+
+    #Plotting fitted cubic curve
+    plt.plot(
+
+        x_fit,
+
+        y_fit,
+
+        color=channel_colors[
+            channel
+        ],
+
+        linewidth=2.2,
+
+        label=(
+            f"{channel} cubic fit "
+            f"($R^2$={r2:.3f})"
+        )
+
+    )
+
+
+    #Printing fitted model
+    a, b, c, d = coefficients
+
 
     print()
-    print(f"{channel} channel")
+
     print(
-        f"Variance = {a:.8f}x^3 "
+        f"{channel} variance model:"
+    )
+
+
+    print(
+
+        f"v(x) = "
+        f"{a:.8f}x^3 "
         f"+ {b:.6f}x^2 "
         f"+ {c:.4f}x "
         f"+ {d:.4f}"
+
     )
-    print(f"R² = {r2:.6f}")
 
-###################################################################################################
-#Now looking at mean
-'''
-plt.figure(figsize=(10, 6))
 
-channels = ["R", "G", "B"]
-
-for channel in channels:
-
-    channel_df = df[
-        df["channel"] == channel
-    ].copy()
-
-    channel_df = channel_df.sort_values(
-        "intensity_center"
+    print(
+        f"R² = {r2:.6f}"
     )
-    if channel == 'R':
-        plt.plot(
-            channel_df["intensity_center"],
-            channel_df["residual_mean"],
-            color='red',
-            marker="o",
-            label=channel
-        )
-    elif channel == 'G':
-        plt.plot(
-            channel_df["intensity_center"],
-            channel_df["residual_mean"],
-            color='green',
-            marker="o",
-            label=channel
-        )
-    else:
-        plt.plot(
-            channel_df["intensity_center"],
-            channel_df["residual_mean"],
-            color='blue',
-            marker="o",
-            label=channel
-        )
 
-plt.axhline(
-    0,
-    linestyle="--"
+
+#Setting axis labels
+plt.xlabel(
+    "Ground Truth Intensity"
 )
 
-plt.xlabel("Ground Truth Intensity")
-plt.ylabel("Mean Residual")
-plt.title("Residual Bias vs Signal Intensity")
 
-plt.legend()
-plt.grid()
+plt.ylabel(
+    "Residual Variance"
+)
+
+
+#Setting title
+plt.title(
+    "Signal-Dependent Residual Variance"
+)
+
+
+#Adding legend
+plt.legend(
+    frameon=True
+)
+
+
+#Adding grid
+plt.grid(
+    alpha=0.25
+)
+
+
+#Making layout compact
 plt.tight_layout()
 
+
+#Saving PNG version
+plt.savefig(
+
+    OUTPUT_DIR
+
+    / "variance_vs_intensity.png",
+
+    dpi=300,
+
+    bbox_inches="tight"
+
+)
+
+
+#Saving PDF version for LaTeX report
+plt.savefig(
+
+    OUTPUT_DIR
+
+    / "variance_vs_intensity.pdf",
+
+    bbox_inches="tight"
+
+)
+
+
+#Showing figure
 plt.show()
-'''
 
-#Testing for red channel
-'''
-red_df = df[
-    df["channel"] == "R"
-].copy()
 
-red_df = red_df.sort_values(
-    "intensity_center"
+# ============================================================
+# Residual mean / bias vs intensity
+# ============================================================
+
+plt.figure(
+    figsize=(8.5, 5.2)
 )
 
-x = red_df[
-    "intensity_center"
-].values
-
-y = red_df[
-    "residual_mean"
-].values
-
-a, b, c, d = fit_cubic(
-    x,
-    y
-)
-
-y_cubic = (
-    a * x**3
-    + b * x**2
-    + c * x
-    + d
-)
-
-r2 = calculate_r2(
-    y,
-    y_cubic
-)
-
-print("Bias cubic model:")
-
-print(
-    f"Mean residual = {a:.8f}x^3 "
-    f"+ {b:.6f}x^2 "
-    f"+ {c:.4f}x "
-    f"+ {d:.4f}"
-)
-
-print(f"R² = {r2:.6f}")
-
-plt.figure(figsize=(10, 6))
-
-plt.scatter(
-    x,
-    y,
-    label="Measured bias"
-)
-
-plt.plot(
-    x,
-    y_cubic,
-    label=f"Cubic fit (R²={r2:.3f})"
-)
-
-plt.axhline(
-    0,
-    linestyle="--"
-)
-
-plt.xlabel("Ground Truth Intensity")
-plt.ylabel("Mean Residual")
-
-plt.title(
-    "Cubic Bias Model - Red Channel"
-)
-
-plt.legend()
-plt.grid()
-
-plt.show()
-'''
-
-#Doing this for the whole channels
-channels = ["R", "G", "B"]
 
 for channel in channels:
 
+    #Selecting current channel
     channel_df = df[
-        df["channel"] == channel
+
+        df[
+            "channel"
+        ]
+
+        == channel
+
     ].copy()
 
+
+    #Sorting according to intensity
     channel_df = channel_df.sort_values(
+
         "intensity_center"
+
     )
 
+
+    #Getting intensity values
     x = channel_df[
+
         "intensity_center"
+
     ].values
 
+
+    #Getting measured residual mean
     y = channel_df[
+
         "residual_mean"
+
     ].values
 
-    a, b, c, d = fit_cubic(
+
+    #Fitting cubic model
+    coefficients = fit_cubic(
+
         x,
+
         y
+
     )
 
-    y_pred = (
-        a * x**3
-        + b * x**2
-        + c * x
-        + d
+
+    #Creating smooth intensity values
+    x_fit = np.linspace(
+
+        x.min(),
+
+        x.max(),
+
+        500
+
     )
 
+
+    #Calculating smooth fitted curve
+    y_fit = np.polyval(
+
+        coefficients,
+
+        x_fit
+
+    )
+
+
+    #Calculating prediction at measured points
+    y_pred = np.polyval(
+
+        coefficients,
+
+        x
+
+    )
+
+
+    #Calculating R squared
     r2 = calculate_r2(
+
         y,
+
         y_pred
+
     )
+
+
+    #Plotting measured bias values
+    plt.scatter(
+
+        x,
+
+        y,
+
+        color=channel_colors[
+            channel
+        ],
+
+        s=20,
+
+        alpha=0.55
+
+    )
+
+
+    #Plotting fitted cubic curve
+    plt.plot(
+
+        x_fit,
+
+        y_fit,
+
+        color=channel_colors[
+            channel
+        ],
+
+        linewidth=2.2,
+
+        label=(
+            f"{channel} cubic fit "
+            f"($R^2$={r2:.3f})"
+        )
+
+    )
+
+
+    #Printing fitted model
+    a, b, c, d = coefficients
+
 
     print()
-    print(f"{channel} channel")
 
     print(
-        f"Bias = {a:.8f}x^3 "
+        f"{channel} bias model:"
+    )
+
+
+    print(
+
+        f"b(x) = "
+        f"{a:.8f}x^3 "
         f"+ {b:.6f}x^2 "
         f"+ {c:.4f}x "
         f"+ {d:.4f}"
+
     )
 
-    print(f"R² = {r2:.6f}")
 
-##############################################################################################################
-#Standardizing the residual
-
-#Testing on a red channel of a single image
-def red_bias(x):
-    return (
-        -0.00000741 * x**3
-        + 0.002352 * x**2
-        - 0.2294 * x
-        + 8.7506
+    print(
+        f"R² = {r2:.6f}"
     )
 
-def red_variance(x):
-    return (
-        -0.00029456 * x**3
-        + 0.063619 * x**2
-        + 4.0171 * x
-        + 249.0226
-    )
 
-gt_r = im1_gt_rgb[:, :, 0].astype(np.float32)
-res_r = residual[:, :, 0]
+#Showing zero bias line
+plt.axhline(
 
-mu = red_bias(gt_r)
+    y=0,
 
-var = red_variance(gt_r)
+    color="black",
 
-# Safety: variance must stay positive
-var = np.maximum(var, 1e-6)
+    linestyle="--",
 
-sigma = np.sqrt(var)
+    linewidth=1.1,
 
-z = (res_r - mu) / sigma
+    alpha=0.7
 
-#Plotting
-plt.figure(figsize=(8, 5))
-
-plt.hist(
-    z.flatten(),
-    bins=100,
-    density=True,
-    alpha=0.7,
-    label="Standardized residual"
 )
 
-x_axis = np.linspace(
-    -5,
-    5,
-    500
+
+#Setting labels
+plt.xlabel(
+    "Ground Truth Intensity"
 )
 
-plt.plot(
-    x_axis,
-    norm.pdf(x_axis, 0, 1),
-    label="Standard Normal N(0,1)"
+
+plt.ylabel(
+    "Mean Residual"
 )
 
-plt.xlabel("Standardized Residual")
-plt.ylabel("Density")
+
+#Setting title
 plt.title(
-    "Standardized Residual vs Standard Gaussian"
+    "Intensity-Dependent Residual Bias"
 )
 
-plt.legend()
-plt.grid()
+
+#Adding legend
+plt.legend(
+    frameon=True
+)
+
+
+#Adding grid
+plt.grid(
+    alpha=0.25
+)
+
+
+#Making layout compact
+plt.tight_layout()
+
+
+#Saving PNG version
+plt.savefig(
+
+    OUTPUT_DIR
+
+    / "bias_vs_intensity.png",
+
+    dpi=300,
+
+    bbox_inches="tight"
+
+)
+
+
+#Saving PDF version for LaTeX report
+plt.savefig(
+
+    OUTPUT_DIR
+
+    / "bias_vs_intensity.pdf",
+
+    bbox_inches="tight"
+
+)
+
+
+#Showing figure
 plt.show()
 
-#Looking at statistics
-print("Mean      :", np.mean(z))
-print("Std       :", np.std(z))
-print("Skewness  :", skew(z.flatten()))
-print("Kurtosis  :", kurtosis(z.flatten()))
 
+print()
+
+print(
+    "=" * 70
+)
+
+print(
+    "REPORT FIGURES CREATED"
+)
+
+print(
+    "=" * 70
+)
+
+
+print(
+    OUTPUT_DIR
+)
