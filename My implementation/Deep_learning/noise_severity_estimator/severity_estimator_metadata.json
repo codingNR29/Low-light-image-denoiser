@@ -1,0 +1,24 @@
+{
+    "feature_names": [
+        "robust_scale",
+        "mean_abs_z",
+        "p90_abs_z",
+        "p95_abs_z",
+        "positive_tail_fraction",
+        "negative_tail_fraction"
+    ],
+    "sample_stride": 4,
+    "severity_centers": [
+        0.5125204703501139,
+        0.8560842321425547,
+        1.1620962469632645
+    ],
+    "threshold_low_medium": 0.6843023512463343,
+    "threshold_medium_high": 1.0090902395529096,
+    "train_correlation": 0.985069694795063,
+    "validation_correlation": 0.988257060230649,
+    "validation_mae": 0.029428254727006185,
+    "validation_rmse": 0.03514460417332488,
+    "validation_r2": 0.976413499659248,
+    "validation_group_accuracy": 1.0
+}
